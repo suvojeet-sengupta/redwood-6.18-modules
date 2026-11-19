@@ -17,7 +17,7 @@ for m in $mods; do
 	touch)
 		T=$K/drivers/input/touchscreen
 		cp $T/goodix_berlin_core.c $T/goodix_berlin_spi.c $T/goodix_berlin.h $W/touch/
-		python3 $S/touch/dt2w.py $W/touch $S/xiaomitouch/xiaomi_touch.h \
+		python3 $S/touch/xm_touch.py $W/touch $S/xiaomitouch/xiaomi_touch.h \
 			$K/include/linux/soc/qcom/panel_event_notifier.h > $W/touch-prep.log 2>&1
 		E="$W/xiaomitouch/Module.symvers" ;;
 	speaker)
