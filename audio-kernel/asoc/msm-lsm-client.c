@@ -2112,10 +2112,11 @@ static int msm_lsm_ioctl_compat(struct snd_pcm_substream *substream,
 	int err = 0;
 	u32 size = 0;
 
-	if (PCM_RUNTIME_CHECK(substream))
+	/* PCM_RUNTIME_CHECK() is private to the ALSA core */
+	if (!substream || !substream->runtime)
 		return -ENXIO;
 
-	if (!substream || !substream->private_data) {
+	if (!substream->private_data) {
 		pr_err("%s: Invalid %s\n", __func__,
 			(!substream) ? "substream" : "private_data");
 		return -EINVAL;
