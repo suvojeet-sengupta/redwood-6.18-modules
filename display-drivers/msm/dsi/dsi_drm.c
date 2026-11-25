@@ -532,9 +532,11 @@ static bool _dsi_bridge_mode_validate_and_fixup(struct drm_bridge *bridge,
 			if ((adj_mode->dsi_mode_flags & DSI_MODE_FLAG_DMS_VID) &&
 					(cur_dsi_mode.timing.refresh_rate !=
 					adj_mode->timing.refresh_rate)) {
-				DSI_ERR("[%s] DMS_VID doesn't support framerate change\n",
-					c_bridge->display->name);
-				return -EINVAL;
+				DSI_WARN("[%s] DMS_VID fps %u->%u, doing a full modeset\n",
+					c_bridge->display->name,
+					cur_dsi_mode.timing.refresh_rate,
+					adj_mode->timing.refresh_rate);
+				adj_mode->dsi_mode_flags &= ~DSI_MODE_FLAG_DMS_VID;
 			}
 
 		SDE_EVT32(SDE_EVTLOG_FUNC_CASE2,
