@@ -19,9 +19,10 @@ static bool enable = true;
 module_param(enable, bool, 0644);
 MODULE_PARM_DESC(enable, "Place CFS tasks with CASS");
 
-static unsigned int eas_gate = 200;
+static unsigned int eas_gate;
 module_param(eas_gate, uint, 0644);
-MODULE_PARM_DESC(eas_gate, "Unboosted wakeups below this utilization keep energy aware placement");
+MODULE_PARM_DESC(eas_gate,
+		 "Unboosted wakeups below this utilization keep energy aware placement, 0 = CASS places every wakeup");
 
 static int newborn_util_max;
 module_param(newborn_util_max, int, 0644);
