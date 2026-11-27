@@ -16,6 +16,7 @@
 #include "sde_crtc.h"
 #include "sde_hw_dspp.h"
 #include "sde_hw_lm.h"
+#include "sde_hw_rc.h"
 #include "sde_ad4.h"
 #include "sde_hw_interrupts.h"
 #include "sde_core_irq.h"
@@ -1758,6 +1759,10 @@ static int _sde_cp_cache_range_property(struct drm_crtc *crtc,
  * those, and the panel's gamma calibration was rejected. Pad such a blob with
  * zeros: the extended tables are only read with the high precision flags,
  * which that HAL never sets.
+ *
+ * The RC mask struct gained height and width the same way, and the rounded
+ * corner mask from that HWC was rejected on every commit. Its mask is always
+ * for the full panel, so fill them in from the mode.
  */
 static struct drm_property_blob *_sde_cp_pad_legacy_lut(struct drm_crtc *crtc,
 		struct drm_property_blob *blob, u32 exp_sz)
@@ -1769,6 +1774,8 @@ static struct drm_property_blob *_sde_cp_pad_legacy_lut(struct drm_crtc *crtc,
 		legacy_sz = exp_sz - 3 * IGC_TBL_LEN_EXTENDED * sizeof(__u32);
 	else if (exp_sz == sizeof(struct drm_msm_pgc_lut))
 		legacy_sz = exp_sz - 3 * PGC_TBL_LEN_EXTENDED * sizeof(__u32);
+	else if (exp_sz == sizeof(struct drm_msm_rc_mask_cfg))
+		legacy_sz = RC_MASK_CFG_LEGACY_SZ;
 	else
 		return blob;
 
@@ -1780,6 +1787,12 @@ static struct drm_property_blob *_sde_cp_pad_legacy_lut(struct drm_crtc *crtc,
 		return blob;
 
 	memcpy(full->data, blob->data, legacy_sz);
+	if (exp_sz == sizeof(struct drm_msm_rc_mask_cfg)) {
+		struct drm_msm_rc_mask_cfg *rc = full->data;
+
+		rc->width = crtc->state->adjusted_mode.hdisplay;
+		rc->height = crtc->state->adjusted_mode.vdisplay;
+	}
 	drm_property_blob_put(blob);
 
 	return full;

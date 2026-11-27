@@ -226,8 +226,13 @@ static int sde_hw_rc_check_mask_cfg(
 	cfg_param_06 = rc_mask_cfg->cfg_param_06;
 	cfg_param_07 = rc_mask_cfg->cfg_param_07;
 	cfg_param_08 = rc_mask_cfg->cfg_param_08;
-	mask_width = rc_mask_cfg->width;
-	mask_height = rc_mask_cfg->height;
+	if (hw_cfg->len == RC_MASK_CFG_LEGACY_SZ) {
+		mask_width = hw_cfg->panel_width;
+		mask_height = hw_cfg->panel_height;
+	} else {
+		mask_width = rc_mask_cfg->width;
+		mask_height = rc_mask_cfg->height;
+	}
 	r1_enable = ((flags & SDE_HW_RC_DISABLE_R1) != SDE_HW_RC_DISABLE_R1);
 	r2_enable = ((flags & SDE_HW_RC_DISABLE_R2) != SDE_HW_RC_DISABLE_R2);
 
@@ -373,7 +378,8 @@ int sde_hw_rc_check_mask(struct sde_hw_dspp *hw_dspp, void *cfg)
 		return 0;
 	}
 
-	if (hw_cfg->len != sizeof(struct drm_msm_rc_mask_cfg) ||
+	if ((hw_cfg->len != sizeof(struct drm_msm_rc_mask_cfg) &&
+			hw_cfg->len != RC_MASK_CFG_LEGACY_SZ) ||
 			!hw_cfg->payload) {
 		SDE_ERROR("invalid payload len %d exp %zd\n", hw_cfg->len,
 				sizeof(struct drm_msm_rc_mask_cfg));

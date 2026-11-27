@@ -7,8 +7,14 @@
 #ifndef _SDE_HW_RC_H
 #define _SDE_HW_RC_H
 
+#include <drm/msm_drm_pp.h>
 #include "sde_hw_mdss.h"
 
+/*
+ * The 5.4 uapi drm_msm_rc_mask_cfg ended at cfg_param_09, before height and
+ * width. redwood's 5.4 vendor HWC still sends that, for a full panel mask.
+ */
+#define RC_MASK_CFG_LEGACY_SZ offsetof(struct drm_msm_rc_mask_cfg, height)
 
 /**
  * sde_hw_rc_init -  Initialize RC internal state object and ops
