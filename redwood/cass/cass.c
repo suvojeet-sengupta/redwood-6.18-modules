@@ -10,6 +10,7 @@
 #include <linux/cpuidle.h>
 #include <linux/module.h>
 #include <linux/sched/clock.h>
+#include <linux/sysctl.h>
 #include <trace/events/sched.h>
 #include <trace/hooks/sched.h>
 
@@ -527,9 +528,34 @@ static void cass_post_init_entity_util_avg(void *unused, struct sched_entity *se
 	se->avg.runnable_avg = max;
 }
 
+/*
+ * The QTI perf HAL sets WALT's sched_boost on touches, launches and screen on,
+ * and logged a failure for each one since 6.18 has no WALT. Take the value so
+ * its boosts go through; CASS doesn't act on it, the HAL's clock floors and
+ * uclamp boosts still do the boosting, and the big cores aren't forced on.
+ */
+static int sched_boost;
+static int sched_boost_min = -3;
+static int sched_boost_max = 3;
+
+static const struct ctl_table cass_sched_boost_table[] = {
+	{
+		.procname	= "sched_boost",
+		.data		= &sched_boost,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &sched_boost_min,
+		.extra2		= &sched_boost_max,
+	},
+};
+
 static int __init sched_cass_init(void)
 {
 	int ret;
+
+	if (!register_sysctl("kernel", cass_sched_boost_table))
+		pr_warn("sched_cass: no /proc/sys/kernel/sched_boost\n");
 
 	ret = register_trace_android_rvh_select_task_rq_fair(cass_select_task_rq_fair, NULL);
 	if (ret)
