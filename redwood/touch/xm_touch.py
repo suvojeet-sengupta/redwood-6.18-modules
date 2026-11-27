@@ -5,7 +5,8 @@
 #   (0xa6 / 0x4c -> KEY_GOTO), with the IC kept in gesture mode while the
 #   screen is off or in doze
 # - 240/480 Hz report rate (cmd 0xc0, sysfs switch_report_rate)
-# - game mode and touch tuning (cmds 0x17 / 0x18) through xiaomi_touch modes
+# - game mode and touch tuning (cmds 0x17 / 0x18) through xiaomi_touch modes,
+#   and game mode alone from sysfs (game_mode)
 # - palm detection (cmd 0x70, large-touch flag -> update_palm_sensor_value)
 # - charger state sent to the IC (cmd 0xaf) from a power_supply notifier
 # Build with xiaomi_touch's Module.symvers in KBUILD_EXTRA_SYMBOLS.
@@ -792,8 +793,34 @@ static ssize_t switch_report_rate_store(struct device *dev,
 
 static DEVICE_ATTR_RW(switch_report_rate);
 
+static ssize_t game_mode_show(struct device *dev,
+\t\t\t      struct device_attribute *attr, char *buf)
+{
+\tstruct goodix_berlin_core *cd = dev_get_drvdata(dev);
+
+\treturn sysfs_emit(buf, "%d\\n",
+\t\t\t!!READ_ONCE(cd->touch_mode[Touch_Game_Mode][GET_CUR_VALUE]));
+}
+
+static ssize_t game_mode_store(struct device *dev,
+\t\t\t       struct device_attribute *attr,
+\t\t\t       const char *buf, size_t count)
+{
+\tbool on;
+\tint ret;
+
+\tif (kstrtobool(buf, &on))
+\t\treturn -EINVAL;
+
+\tret = goodix_berlin_xm_set_mode(Touch_Game_Mode, on);
+\treturn ret ? ret : count;
+}
+
+static DEVICE_ATTR_RW(game_mode);
+
 static struct attribute *goodix_berlin_attrs[] = {
 \t&dev_attr_switch_report_rate.attr,
+\t&dev_attr_game_mode.attr,
 \tNULL,
 };
 
